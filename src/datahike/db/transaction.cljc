@@ -137,6 +137,10 @@
                :cljs (first (dbi/-datoms db :eavt [max-tx a] ctx)))
             .-v)))
 
+(defn- get-time [d]
+  #?(:clj (.getTime ^Date d)
+     :cljs (.getTime d))) 
+
 (defn ^:dynamic next-tx-instant
   "Strictly-monotonic `:db/txInstant` allocator. Returns
    `max(get-date, prev-tx-instant + 1ms)` so back-to-back writes
@@ -163,8 +167,8 @@
 
    See ADR for the design rationale."
   [db-before]
-  (let [now-ms  (#?(:clj .getTime :cljs .getTime) (get-date))
-        prev-ms (some-> (last-tx-instant db-before) .getTime)
+  (let [now-ms  (get-time (get-date))
+        prev-ms (some-> (last-tx-instant db-before) get-time)
         ms      (if (or (nil? prev-ms) (< (long prev-ms) (long now-ms)))
                   (long now-ms)
                   (inc (long prev-ms)))]
