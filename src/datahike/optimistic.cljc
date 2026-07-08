@@ -101,7 +101,7 @@
 ;; Datom helpers for tx-report deltas
 ;; -----------------------------------------------------------------------------
 
-(defn- key-eav [d]
+(defn- key-eav [^datahike.datom.Datom d]
   [(.-e d) (.-a d) (.-v d)])
 
 (defn- negate
@@ -113,7 +113,7 @@
   `[[:db/retract 1 :name \"old\"]]`), the `:overlay-add` event shipped
   the retract to the consumer; rolling it back means re-asserting."
   [datoms]
-  (mapv (fn [d]
+  (mapv (fn [^datahike.datom.Datom d]
           (dd/datom (.-e d) (.-a d) (.-v d) (dd/datom-tx d)
                     (not (dd/datom-added d))))
         datoms))
@@ -160,8 +160,8 @@
   (let [realized-keys (into #{} (comp (filter dd/datom-added) (map key-eav)) realized)]
     (->> predicted
          (filter dd/datom-added)
-         (remove (fn [d] (realized-keys (key-eav d))))
-         (mapv (fn [d] (dd/datom (.-e d) (.-a d) (.-v d) (dd/datom-tx d) false))))))
+         (remove (fn [^datahike.datom.Datom d] (realized-keys (key-eav d))))
+         (mapv (fn [^datahike.datom.Datom d] (dd/datom (.-e d) (.-a d) (.-v d) (dd/datom-tx d) false))))))
 
 ;; -----------------------------------------------------------------------------
 ;; Listener firing

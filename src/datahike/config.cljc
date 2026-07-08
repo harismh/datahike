@@ -77,7 +77,7 @@
                  (case backend
                    :memory {:id (or id
                                     (when (or host path)
-                                      #?(:clj (java.util.UUID/nameUUIDFromBytes (.getBytes (str (or host path)) "UTF-8"))
+                                      #?(:clj (java.util.UUID/nameUUIDFromBytes (.getBytes ^String (str (or host path)) "UTF-8"))
                                          :cljs (uuid (str (or host path))))))}
                    :pg {:username username
                         :password password
@@ -88,12 +88,12 @@
                    :level {:path path
                            :id (or id
                                    (when path
-                                     #?(:clj (java.util.UUID/nameUUIDFromBytes (.getBytes path "UTF-8"))
+                                     #?(:clj (java.util.UUID/nameUUIDFromBytes (.getBytes ^String path "UTF-8"))
                                         :cljs (uuid path))))}
                    :file {:path path
                           :id (or id
                                   (when path
-                                    #?(:clj (java.util.UUID/nameUUIDFromBytes (.getBytes path "UTF-8"))
+                                    #?(:clj (java.util.UUID/nameUUIDFromBytes (.getBytes ^String path "UTF-8"))
                                        :cljs (uuid path))))}))
    :index index
    :index-config (di/default-index-config index)

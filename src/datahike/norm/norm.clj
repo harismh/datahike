@@ -37,33 +37,37 @@
        d/q
        some?))
 
-(defn- get-jar [resource]
+(defn- get-jar [^URL resource]
   (-> (.getPath resource)
       (string/split #"!" 2)
       first
       (subs 5)
       JarFile.))
 
+(defn- get-name [file-or-entry]
+  (cond
+    (instance? File file-or-entry) (.getName ^File file-or-entry)
+    (instance? JarEntry file-or-entry) (.getName ^JarEntry file-or-entry)))
+
 (defmulti ^:private retrieve-file-list
   (fn [file-or-resource] (type file-or-resource)))
 
-(defmethod ^:private retrieve-file-list File [file]
+(defmethod ^:private retrieve-file-list File [^File file]
   (if (.exists file)
     (let [migration-files (file-seq file)
           xf (comp
-              (filter #(.isFile %))
-              (filter #(string/ends-with? (.getPath %) ".edn")))]
+              (filter #(.isFile ^File %))
+              (filter #(string/ends-with? (.getPath ^File %) ".edn")))]
       (into [] xf migration-files))
     (log/raise (format "Norms folder %s does not exist." (str file)) {:folder file})))
 
-(defmethod ^:private retrieve-file-list URL [resource]
+(defmethod ^:private retrieve-file-list URL [^URL resource]
   (if resource
     (let [abs-path (.getPath resource)
           last-path-segment (-> abs-path (string/split #"/") peek)]
       (if (string/starts-with? abs-path "file:")
-        (->> (get-jar resource)
-             .entries
-             enumeration-seq
+        (->> (enumeration-seq
+              (.entries ^JarFile (get-jar resource)))
              (filter #(and (string/starts-with? (.getName %) last-path-segment)
                            (not (.isDirectory %))
                            (string/ends-with? % ".edn"))))
@@ -75,8 +79,9 @@
   (log/raise "Can only read a File or a URL (resource)" {:arg arg :type (type arg)}))
 
 (defn- filter-file-list [file-list]
-  (filter #(and (string/ends-with? % ".edn")
-                (not (string/ends-with? (.getName %) checksums-file)))
+  (filter #(let [name (get-name %)]
+             (and (string/ends-with? name ".edn")
+                  (not (string/ends-with? name checksums-file))))
           file-list))
 
 (defn filename->keyword [filename]
@@ -87,7 +92,7 @@
 (defmulti ^:private read-edn-file
   (fn [file-or-entry _file-or-resource] (type file-or-entry)))
 
-(defmethod ^:private read-edn-file File [f _file]
+(defmethod ^:private read-edn-file File [^File f _file]
   (when (not (.exists f))
     (log/raise "Failed reading file because it does not exist" {:filename (str f)}))
   [(-> (slurp f)
@@ -95,14 +100,14 @@
    {:name (.getName f)
     :norm (filename->keyword (.getName f))}])
 
-(defmethod ^:private read-edn-file JarEntry [entry resource]
+(defmethod ^:private read-edn-file JarEntry [^JarEntry entry ^URL resource]
   (when (nil? resource)
     (log/raise "Failed reading resource because it does not exist" {:resource (str resource)}))
   (let [file-name (-> (.getName entry)
                       (string/split #"/")
                       peek)]
-    [(-> (get-jar resource)
-         (.getInputStream entry)
+    [(-> (.getInputStream ^JarFile
+          (get-jar resource) entry)
          slurp
          edn/read-string)
      {:name file-name
@@ -164,7 +169,7 @@
 (defmulti verify-checksums
   (fn [file-or-resource] (type file-or-resource)))
 
-(defmethod verify-checksums File [file]
+(defmethod verify-checksums File [^File file]
   (let [norm-list (-> (retrieve-file-list file)
                       filter-file-list
                       (read-norm-files file))
@@ -174,12 +179,12 @@
     (diff-checksums (compute-checksums norm-list)
                     edn-content)))
 
-(defmethod verify-checksums URL [resource]
+(defmethod verify-checksums URL [^URL resource]
   (let [file-list (retrieve-file-list resource)
         norm-list (-> (filter-file-list file-list)
                       (read-norm-files resource))
         edn-content (-> (->> file-list
-                             (filter #(-> (.getName %) (string/ends-with? checksums-file)))
+                             (filter #(-> (get-name %) (string/ends-with? checksums-file)))
                              first)
                         (read-edn-file resource)
                         first)]
@@ -189,13 +194,13 @@
 (defmulti ^:private ensure-norms
   (fn [_conn file-or-resource] (type file-or-resource)))
 
-(defmethod ^:private ensure-norms File [conn file]
+(defmethod ^:private ensure-norms File [conn ^File file]
   (let [norm-list (-> (retrieve-file-list file)
                       filter-file-list
                       (read-norm-files file))]
     (transact-norms conn norm-list)))
 
-(defmethod ^:private ensure-norms URL [conn resource]
+(defmethod ^:private ensure-norms URL [conn ^URL resource]
   (let [file-list (retrieve-file-list resource)
         norm-list (-> (filter-file-list file-list)
                       (read-norm-files resource))]

@@ -148,9 +148,9 @@
                       _       (when-not head
                                 (throw (ex-info "verify-chain: no head cid on db"
                                                 {:type :audit/no-head})))
-                      commits (volatile! [])
-                      missing (volatile! [])
-                      visited (volatile! #{})]
+                      ^clojure.lang.Volatile commits (volatile! [])
+                      ^clojure.lang.Volatile missing (volatile! [])
+                      ^clojure.lang.Volatile visited (volatile! #{})]
                   (loop [frontier [head] n 0]
                     (when (and (seq frontier) (< n limit))
                       (let [cid (first frontier) rest-f (rest frontier)]
