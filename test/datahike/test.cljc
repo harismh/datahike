@@ -27,6 +27,7 @@
    #?(:clj datahike.test.query-interop-test)
    datahike.test.query-not-test
    datahike.test.query-or-test
+   datahike.test.query-pull-test
    datahike.test.query-rules-test
    datahike.test.specification-test
    #?(:clj datahike.test.schema-test)
@@ -88,6 +89,7 @@
      'datahike.test.query-find-specs-test
      'datahike.test.query-not-test
      'datahike.test.query-or-test
+     'datahike.test.query-pull-test
      'datahike.test.query-rules-test
      'datahike.test.specification-test
      'datahike.test.time-variance-test

@@ -2,8 +2,11 @@
   (:require
    #?(:cljs [cljs.test    :as t :refer-macros [is are deftest testing]]
       :clj  [clojure.test :as t :refer        [is are deftest testing]])
+   [clojure.core.async :refer [<!]]
    [datahike.api :as d]
-   [datahike.db :as db]))
+   [datahike.db :as db]
+   [datahike.test.async #?(:clj :refer :cljs :refer-macros) [deftest-async]]
+   [datahike.test.utils :as utils]))
 
 (def test-db (d/db-with (db/empty-db)
                         [{:db/id 1 :name "Petr" :age 44}
@@ -146,28 +149,27 @@
            #{[[:name "Petr"] 44 {:db/id 1 :name "Petr"}]
              [[:name "Ivan"] 25 {:db/id 2 :name "Ivan"}]}))))
 
-(deftest test-pull-retract-cache-invalidation
+(deftest-async test-pull-retract-cache-invalidation
   (testing "Retracting an attr only referenced in pull invalidates the cache"
     (let [cfg {:store {:backend :memory :id (random-uuid)}
                :schema-flexibility :write
                :attribute-refs? false}
-          _ (d/create-database cfg)
-          conn (d/connect cfg)]
+          conn (<! (utils/setup-db-async cfg))]
       (try
-        (d/transact conn [{:db/ident :c/id
-                           :db/valueType :db.type/string
-                           :db/unique :db.unique/identity
-                           :db/cardinality :db.cardinality/one}
-                          {:db/ident :c/labels
-                           :db/valueType :db.type/string
-                           :db/cardinality :db.cardinality/many}])
-        (d/transact conn [{:c/id "t1" :c/labels ["a" "b"]}])
+        (<! (d/transact! conn [{:db/ident :c/id
+                                :db/valueType :db.type/string
+                                :db/unique :db.unique/identity
+                                :db/cardinality :db.cardinality/one}
+                               {:db/ident :c/labels
+                                :db/valueType :db.type/string
+                                :db/cardinality :db.cardinality/many}]))
+        (<! (d/transact! conn [{:c/id "t1" :c/labels ["a" "b"]}]))
         ;; Populate cache — :c/labels only in pull, not in :where
         (d/q '[:find [(pull ?c [:c/id :c/labels]) ...]
                :where [?c :c/id]]
              @conn)
         ;; Retract one label
-        (let [tx (d/transact conn [[:db/retract [:c/id "t1"] :c/labels "a"]])]
+        (let [tx (<! (d/transact! conn [[:db/retract [:c/id "t1"] :c/labels "a"]]))]
           (is (= ["b"]
                  (:c/labels (first (d/q '[:find [(pull ?c [:c/id :c/labels]) ...]
                                           :where [?c :c/id]]
