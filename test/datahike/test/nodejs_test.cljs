@@ -1,33 +1,12 @@
 (ns datahike.test.nodejs-test
   (:require [cljs.test :refer [deftest is async] :as t]
             [datahike.api :as d]
+            [datahike.test :refer [test-cljs]]
             [datahike.online-gc :as online-gc]
             [konserve.core :as k]
             [konserve.node-filestore] ;; Register :file backend for Node.js
             [cljs.core.async :refer [go <!] :include-macros true]
-            [cljs.nodejs :as nodejs]
-            ;; Sibling test namespaces — included so `bb node-cljs-test`
-            ;; covers them too.
-            [datahike.test.index-test]
-            [datahike.test.cljs-tiered-storage-test]
-            [datahike.test.cljs-pattern-scan-test]
-            [datahike.test.optimistic-test]
-            [datahike.test.valid-time-test]
-            ;; Portable query suites — exercise the query-engine paths that were
-            ;; JVM-only (NOT-JOIN, OR, aggregates, recursive rules) on cljs too.
-            [datahike.test.time-variance-test]
-            [datahike.test.query-not-test]
-            [datahike.test.query-or-test]
-            [datahike.test.query-aggregates-test]
-            [datahike.test.query-rules-test]
-            ;; Portable graph algorithms.
-            [datahike.test.experimental.graph-util-test]
-            [datahike.test.experimental.graph-test]
-            [datahike.test.experimental.anomaly-test]
-            ;; Weighted LRU query-cache — the cljs WeightedLRU deftype has its
-            ;; own implementation, so cover it (unit + test.check property) here.
-            [datahike.test.lru-weighted-test]
-            [datahike.test.lru-weighted-property-test]))
+            [cljs.nodejs :as nodejs]))
 
 ;; Hook cljs.test's end-of-run callback so the Node process exits with
 ;; status 0 only when all tests pass. The previous setup always exited
@@ -369,20 +348,10 @@
              (finally
                (done))))))
 
-(defn -main []
-  (t/run-tests 'datahike.test.nodejs-test
-               'datahike.test.index-test
-               'datahike.test.cljs-tiered-storage-test
-               'datahike.test.cljs-pattern-scan-test
-               'datahike.test.optimistic-test
-               'datahike.test.valid-time-test
-               'datahike.test.time-variance-test
-               'datahike.test.query-not-test
-               'datahike.test.query-or-test
-               'datahike.test.query-aggregates-test
-               'datahike.test.query-rules-test
-               'datahike.test.experimental.graph-util-test
-               'datahike.test.experimental.graph-test
-               'datahike.test.experimental.anomaly-test
-               'datahike.test.lru-weighted-test
-               'datahike.test.lru-weighted-property-test))
+(defn -main
+  "Started originally as a node test runner,
+  we run all compatible CLJS tests here to
+  keep CI/CD's bb node-cljs-test command intact
+  and maintain parity with JVM and Native."
+  []
+  (test-cljs))
