@@ -12,7 +12,7 @@
    datahike.test.filter-test
    datahike.test.ident-test
    datahike.test.index-test
-   #?(:clj datahike.test.listen-test)
+   datahike.test.listen-test
    datahike.test.lookup-refs-test
    datahike.test.lru-test
    datahike.test.lru-weighted-test
@@ -78,6 +78,7 @@
      'datahike.test.ident-test
      ;; Sibling test namespaces
      'datahike.test.index-test
+     'datahike.test.listen-test
      'datahike.test.lookup-refs-test
      'datahike.test.lru-test
      'datahike.test.pull-api-test
