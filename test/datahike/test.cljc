@@ -3,7 +3,7 @@
    #?(:cljs [cljs.test    :as t]
       :clj  [clojure.test :as t])
    [datahike.test.core-test :refer [wrap-res]]
-   #?(:clj datahike.test.cache-test)
+   datahike.test.cache-test
    datahike.test.components-test
    #?(:clj datahike.test.config-test)
    datahike.test.db-test
@@ -70,6 +70,7 @@
   (wrap-res
    #(t/run-tests
      'datahike.test.components-test
+     'datahike.test.cache-test
      'datahike.test.core-test
      'datahike.test.db-test
      'datahike.test.filter-test
