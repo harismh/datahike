@@ -19,7 +19,7 @@
    datahike.test.lru-weighted-property-test
    #?(:clj datahike.test.migrate-test)
    datahike.test.pull-api-test
-   #?(:clj datahike.test.purge-test)
+   datahike.test.purge-test
    #?(:clj datahike.test.query-test)
    datahike.test.query-aggregates-test
    datahike.test.query-find-specs-test
@@ -82,6 +82,7 @@
      'datahike.test.lookup-refs-test
      'datahike.test.lru-test
      'datahike.test.pull-api-test
+     'datahike.test.purge-test
      'datahike.test.cljs-tiered-storage-test
      'datahike.test.cljs-pattern-scan-test
      'datahike.test.optimistic-test
