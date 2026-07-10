@@ -18,8 +18,8 @@
                            [:db/add -2 :name "Boris"]]))
     (d/listen conn :test #(swap! reports conj %))
     (<! (d/transact! conn {:tx-data [[:db/add -1 :name "Dima"]
-                                       [:db/add -1 :age 19]
-                                       [:db/add -2 :name "Evgeny"]]
+                                     [:db/add -1 :age 19]
+                                     [:db/add -2 :name "Evgeny"]]
                            :tx-meta {:some-metadata 1}}))
     (<! (d/transact! conn [[:db/add -1 :name "Fedor"]
                            [:db/add 1 :name "Alex2"]         ;; should update

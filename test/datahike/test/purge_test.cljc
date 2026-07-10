@@ -104,21 +104,21 @@
           (is (= #{} (find-entities @conn)))
           (is (= #{} (find-entities (d/history @conn)))))))
 
-      (testing "purge something that is not present in the database"
-        (is (tu/error-msg-satisfies?
-          #(re-find #"Can't find entity with ID \[:name \"Alice\"\] to be purged" %)
-          (<! (d/transact! conn [[:db.purge/entity [:name "Alice"]]])))))
+    (testing "purge something that is not present in the database"
+      (is (tu/error-msg-satisfies?
+           #(re-find #"Can't find entity with ID \[:name \"Alice\"\] to be purged" %)
+           (<! (d/transact! conn [[:db.purge/entity [:name "Alice"]]])))))
     (when conn (d/release conn))))
 
 (deftest-async test-purge-non-temporal-database
   (let [cfg (-> (assoc-in cfg-template [:store :id] #uuid "09000000-0000-0000-0000-000000000004")
                 (assoc :keep-history? false))
         conn (<! (tu/setup-db-async cfg))]
-  (testing "purge data in non temporal database"
-    (is (tu/error-msg-satisfies?
-        #(re-find #"Purge entity is only available in temporal databases\." %)
-        (<! (d/transact! conn [[:db.purge/entity [:name "Alice"]]])))))
-           (when conn (d/release conn))))
+    (testing "purge data in non temporal database"
+      (is (tu/error-msg-satisfies?
+           #(re-find #"Purge entity is only available in temporal databases\." %)
+           (<! (d/transact! conn [[:db.purge/entity [:name "Alice"]]])))))
+    (when conn (d/release conn))))
 
 (defn find-ages [db name]
   (d/q '[:find ?a ?op
