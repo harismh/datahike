@@ -2,31 +2,35 @@
   (:require
    #?(:cljs [cljs.test    :as t :refer-macros [is are deftest testing]]
       :clj  [clojure.test :as t :refer        [is are deftest testing]])
+   [clojure.core.async :refer [<!]]
    [datahike.api :as d]
    [datahike.db :as db]
+   [datahike.test.async #?(:clj :refer :cljs :refer-macros) [deftest-async]]
    [datahike.test.utils :as dtu]
    [datahike.test.core-test]))
 
 #?(:cljs
    (def Throwable js/Error))
 
-(deftest test-explode
+(deftest-async test-explode
   (doseq [coll [["Devil" "Tupen"]
                 #{"Devil" "Tupen"}
                 '("Devil" "Tupen")
                 (to-array ["Devil" "Tupen"])]]
     (testing coll
-      (let [conn (dtu/setup-db {:initial-tx [{:db/ident :aka
-                                              :db/valueType :db.type/string
-                                              :db/cardinality :db.cardinality/many}
-                                             {:db/ident :also
-                                              :db/valueType :db.type/string
-                                              :db/cardinality :db.cardinality/many}]})]
-        (d/transact conn {:tx-data [{:db/id -1
-                                     :name  "Ivan"
-                                     :age   16
-                                     :aka   coll
-                                     :also  "ok"}]})
+      (let [cfg (merge (dtu/cfg-template)
+                       {:initial-tx [{:db/ident :aka
+                                      :db/valueType :db.type/string
+                                      :db/cardinality :db.cardinality/many}
+                                     {:db/ident :also
+                                      :db/valueType :db.type/string
+                                      :db/cardinality :db.cardinality/many}]})
+            conn (<! (dtu/setup-db-async cfg))]
+        (<! (d/transact! conn [{:db/id -1
+                                :name  "Ivan"
+                                :age   16
+                                :aka   coll
+                                :also  "ok"}]))
         (is (= (d/q '[:find  ?n ?a
                       :where
                       [3 :name ?n]
@@ -40,7 +44,9 @@
         (is (= (d/q '[:find  ?v
                       :where [3 :aka ?v]]
                     @conn)
-               #{["Devil"] ["Tupen"]}))))))
+               #{["Devil"] ["Tupen"]}))
+        (d/release conn)
+        (d/delete-database cfg)))))
 
 (deftest test-explode-ref
   (let [db0 (db/empty-db {:children {:db/valueType :db.type/ref
@@ -140,4 +146,3 @@
     (is (= (mapv (juxt :e :a :v) (d/datoms db :eavt))
            [[1 :comp 2]
             [2 :name "C"]]))))
-

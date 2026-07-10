@@ -8,7 +8,7 @@
    #?(:clj datahike.test.config-test)
    datahike.test.db-test
    #?(:clj datahike.test.entity-test)
-   #?(:clj datahike.test.explode-test)
+   datahike.test.explode-test
    datahike.test.filter-test
    datahike.test.ident-test
    datahike.test.index-test
@@ -73,6 +73,7 @@
      'datahike.test.cache-test
      'datahike.test.core-test
      'datahike.test.db-test
+     'datahike.test.explode-test
      'datahike.test.filter-test
      'datahike.test.ident-test
      ;; Sibling test namespaces
