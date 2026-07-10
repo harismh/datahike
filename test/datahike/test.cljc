@@ -24,7 +24,7 @@
    datahike.test.query-aggregates-test
    datahike.test.query-find-specs-test
    #?(:clj datahike.test.query-fns-test)
-   #?(:clj datahike.test.query-interop-test)
+   datahike.test.query-interop-test
    datahike.test.query-not-test
    datahike.test.query-or-test
    datahike.test.query-pull-test
@@ -90,6 +90,7 @@
      ;; JVM-only (NOT-JOIN, OR, aggregates, recursive rules) on cljs too.
      'datahike.test.query-aggregates-test
      'datahike.test.query-find-specs-test
+     'datahike.test.query-interop-test
      'datahike.test.query-not-test
      'datahike.test.query-or-test
      'datahike.test.query-pull-test

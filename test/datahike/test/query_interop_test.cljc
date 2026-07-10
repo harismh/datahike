@@ -2,6 +2,7 @@
   (:require
    #?(:cljs [cljs.test    :as t :refer-macros [is are deftest]]
       :clj  [clojure.test :as t :refer        [is are deftest]])
+   [clojure.string]
    [datahike.api :as d]
    [datahike.db :as db]))
 
@@ -15,28 +16,35 @@
     [:db/add 3 :name "Sergey"]]))
 
 (deftest test-filter
-  (are [q expected] (= (d/q q test-db) expected)
+  (are [q args expected] (= (apply d/q q test-db args) expected)
     '[:find ?v
+      :in $ ?pred
       :where [_ :name ?v]
-      [(.startsWith ?v "Ser")]]
+      [(?pred ?v "Ser")]]
+    [clojure.string/starts-with?]
     #{["Sergey"]}
 
     '[:find ?v
+      :in $ ?pred
       :where [_ :name ?v]
-      [(.contains ?v "a")]]
+      [(?pred ?v "a")]]
+    [clojure.string/includes?]
     #{["Vlad"] ["Ivan"]}
 
     '[:find ?v
       :where [_ :name ?v]
-      [(.matches ?v ".+rg.+")]]
+      [(re-matches #".+rg.+" ?v)]]
+    []
     #{["Sergey"]}))
 
 (deftest test-bind
-  (are [q expected] (= (d/q q test-db) expected)
+  (are [q args expected] (= (apply d/q q test-db args) expected)
     '[:find ?V
+      :in $ ?lower-case
       :where
       [?e :name ?v]
-      [(.toLowerCase ?v) ?V]]
+      [(?lower-case ?v) ?V]]
+    [clojure.string/lower-case]
     #{["vlad"] ["ivan"] ["sergey"]}))
 
 (deftest test-method-not-found
