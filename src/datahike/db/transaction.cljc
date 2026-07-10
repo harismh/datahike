@@ -943,7 +943,7 @@
 
 (defn- filter-before [datoms ^Date before-date db]
   (let [before-pred (fn [^Datom d]
-                      (.before ^Date (.-v d) before-date))
+                      (bp/date-before? (.-v d) before-date))
         filtered-tx-ids (dbu/filter-txInstant datoms before-pred db)]
     (filter
      (fn [^Datom d]
